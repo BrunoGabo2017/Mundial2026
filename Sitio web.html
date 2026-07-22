@@ -1,552 +1,468 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atlas Europa - Mapa Turístico</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://unpkg.com/topojson-client@3"></script>
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #e8edf3;
-            color: #1e2b37;
-            transition: background 0.3s, color 0.3s;
-            height: 100vh;
-            overflow: hidden;
-        }
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        body.dark {
-            background: #121a22;
-            color: #e8edf2;
-        }
+<title>Mundial FIFA 2026 | Europa</title>
 
-        .app {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-        .header {
-            background: white;
-            padding: 0.8rem 2rem;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-            gap: 1rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            z-index: 10;
-            border-bottom: 1px solid #e2e8f0;
-        }
+<style>
 
-        body.dark .header {
-            background: #1a2630;
-            border-bottom-color: #2d3f4f;
-        }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
 
-        .logo h1 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #1a4a6e;
-        }
+body{
+background:#eef3f8;
+color:#222;
+}
 
-        body.dark .logo h1 {
-            color: #f5c542;
-        }
+header{
 
-        .logo i {
-            color: #f5c542;
-            font-size: 1.6rem;
-        }
+background:linear-gradient(135deg,#002868,#0057b8,#c8102e);
 
-        .header-controls {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.8rem;
-        }
+color:white;
 
-        .search-box {
-            background: #f1f3f5;
-            border-radius: 8px;
-            padding: 0.4rem 1rem;
-            display: flex;
-            align-items: center;
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s;
-        }
+text-align:center;
 
-        body.dark .search-box {
-            background: #2d3f4f;
-            border-color: #3d5a6d;
-        }
+padding:70px 20px;
 
-        .search-box input {
-            background: transparent;
-            border: none;
-            padding: 0.4rem 0.5rem;
-            color: #1e2b37;
-            font-size: 0.9rem;
-            width: 180px;
-            outline: none;
-        }
+}
 
-        body.dark .search-box input {
-            color: #e8edf2;
-        }
+header h1{
 
-        .theme-toggle {
-            background: #f1f3f5;
-            border: 1px solid #e2e8f0;
-            color: #4a5568;
-            font-size: 1.1rem;
-            padding: 0.4rem 0.8rem;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+font-size:55px;
 
-        body.dark .theme-toggle {
-            background: #2d3f4f;
-            border-color: #3d5a6d;
-            color: #cbd5e0;
-        }
+margin-bottom:15px;
 
-        .map-container {
-            flex: 1;
-            position: relative;
-            background: #aadaff;
-            transition: background 0.3s;
-            overflow: hidden;
-        }
+}
 
-        body.dark .map-container {
-            background: #0d1b2a;
-        }
+header p{
 
-        #map-svg {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
+font-size:22px;
 
-        .country {
-            transition: fill 0.2s, stroke 0.2s;
-            cursor: pointer;
-            stroke: #ffffff;
-            stroke-width: 0.8px;
-            vector-effect: non-scaling-stroke;
-            fill: #8aa3b3;
-        }
+max-width:850px;
 
-        .country:hover {
-            stroke: #f5c542;
-            stroke-width: 2px;
-            fill: #607d8b;
-        }
+margin:auto;
 
-        .country.active {
-            stroke: #f5c542;
-            stroke-width: 2px;
-            fill: #f5c542 !important;
-        }
+}
 
-        body.dark .country {
-            stroke: #1a2630;
-            fill: #2d4558;
-        }
+nav{
 
-        body.dark .country:hover {
-            fill: #3b5970;
-        }
+background:#012c5a;
 
-        .side-panel {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 100%;
-            max-width: 440px;
-            height: 100%;
-            background: white;
-            box-shadow: -8px 0 30px rgba(0, 0, 0, 0.15);
-            transform: translateX(110%);
-            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-            z-index: 1000;
-            overflow-y: auto;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.2rem;
-        }
+position:sticky;
 
-        body.dark .side-panel {
-            background: #1e2a34;
-            color: #e8edf2;
-        }
+top:0;
 
-        .side-panel.open {
-            transform: translateX(0);
-        }
+padding:15px;
 
-        .panel-close {
-            align-self: flex-end;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: #1e2b37;
-            cursor: pointer;
-        }
+display:flex;
 
-        body.dark .panel-close {
-            color: #e8edf2;
-        }
+justify-content:center;
 
-        .flag-name {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+gap:25px;
 
-        .flag-name img {
-            width: 52px;
-            height: 35px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+flex-wrap:wrap;
 
-        .attraction-card {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 1rem;
-            border: 1px solid #e2e8f0;
-            margin-top: 0.8rem;
-        }
+}
 
-        body.dark .attraction-card {
-            background: #26343f;
-            border-color: #3d5a6d;
-        }
+nav a{
 
-        .attraction-card img {
-            width: 100%;
-            height: 190px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-top: 0.6rem;
-        }
+color:white;
 
-        .attraction-card ul {
-            margin-top: 0.5rem;
-            padding-left: 1.2rem;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
+text-decoration:none;
 
-        .backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(3px);
-            z-index: 999;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
+font-weight:bold;
 
-        .backdrop.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
+font-size:18px;
 
-        .map-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 5;
-        }
+}
 
-        .map-controls button {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.1rem;
-            color: #1e2b37;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+nav a:hover{
 
-        body.dark .map-controls button {
-            background: #2d3f4f;
-            border-color: #3d5a6d;
-            color: #e8edf2;
-        }
-    </style>
+color:#ffd700;
+
+}
+
+.buscador{
+
+text-align:center;
+
+padding:30px;
+
+background:white;
+
+}
+
+#buscar{
+
+width:70%;
+
+max-width:700px;
+
+padding:15px;
+
+font-size:18px;
+
+border-radius:8px;
+
+border:2px solid #0057b8;
+
+outline:none;
+
+}
+
+section{
+
+width:90%;
+
+max-width:1200px;
+
+margin:40px auto;
+
+}
+
+.pais{
+
+background:white;
+
+border-radius:15px;
+
+padding:30px;
+
+margin-bottom:40px;
+
+box-shadow:0 5px 15px rgba(0,0,0,.15);
+
+}
+
+.pais img{
+
+width:100%;
+
+height:420px;
+
+object-fit:cover;
+
+border-radius:12px;
+
+margin:20px 0;
+
+}
+
+.pais h2{
+
+font-size:35px;
+
+color:#0057b8;
+
+margin-bottom:15px;
+
+}
+
+.pais p{
+
+font-size:18px;
+
+line-height:1.8;
+
+}
+
+.pais ul{
+
+margin-top:20px;
+
+margin-left:30px;
+
+line-height:2;
+
+font-size:18px;
+
+}
+
+footer{
+
+background:#012c5a;
+
+color:white;
+
+text-align:center;
+
+padding:35px;
+
+margin-top:50px;
+
+}
+
+@media(max-width:700px){
+
+header h1{
+
+font-size:38px;
+
+}
+
+#buscar{
+
+width:95%;
+
+}
+
+.pais img{
+
+height:250px;
+
+}
+
+}
+
+</style>
+
 </head>
+
 <body>
-    <div class="app">
-        <header class="header">
-            <div class="logo">
-                <h1><i class="fas fa-map-marked-alt"></i> Atlas Europa</h1>
-            </div>
-            <div class="header-controls">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Buscar país...">
-                </div>
-                <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
-            </div>
-        </header>
 
-        <div class="map-container" id="mapContainer">
-            <svg id="map-svg"></svg>
-            <div class="map-controls">
-                <button id="zoomIn" title="Acercar"><i class="fas fa-plus"></i></button>
-                <button id="zoomOut" title="Alejar"><i class="fas fa-minus"></i></button>
-                <button id="resetZoom" title="Restablecer"><i class="fas fa-crosshairs"></i></button>
-            </div>
-        </div>
-    </div>
+<header>
 
-    <div class="backdrop" id="backdrop"></div>
-    <aside class="side-panel" id="sidePanel">
-        <button class="panel-close" id="panelClose"><i class="fas fa-times"></i></button>
-        <div class="panel-content" id="panelContent"></div>
-    </aside>
+<h1>⚽ FIFA WORLD CUP 2026</h1>
 
-    <script>
-        // Mapeo preciso por nombre geográfico
-        const countriesData = {
-            "Spain": {
-                name: "España",
-                capital: "Madrid",
-                flag: "https://flagcdn.com/es.svg",
-                desc: "País mediterráneo reconocido por su vibrante cultura, gastronomía y patrimonio arquitectónico.",
-                image: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=600&q=80",
-                spots: ["La Sagrada Familia (Barcelona)", "La Alhambra (Granada)", "Parque Güell", "Museo del Prado (Madrid)"]
-            },
-            "France": {
-                name: "Francia",
-                capital: "París",
-                flag: "https://flagcdn.com/fr.svg",
-                desc: "Referente mundial del arte, la moda, la gastronomía y la historia europea.",
-                image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80",
-                spots: ["Torre Eiffel (París)", "Museo del Louvre", "Palacio de Versalles", "Costa Azul"]
-            },
-            "Italy": {
-                name: "Italia",
-                capital: "Roma",
-                flag: "https://flagcdn.com/it.svg",
-                desc: "Famosa por su imperio milenario, paisajes variados y una de las gastronomías más populares del planeta.",
-                image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80",
-                spots: ["Coliseo Romano", "Canales de Venecia", "Catedral de Florencia", "Costa Amalfitana"]
-            },
-            "Germany": {
-                name: "Alemania",
-                capital: "Berlín",
-                flag: "https://flagcdn.com/de.svg",
-                desc: "Combinación de historia medieval, vanguardia urbana y densos bosques mágicos.",
-                image: "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=600&q=80",
-                spots: ["Castillo Neuschwanstein", "Puerta de Brandeburgo (Berlín)", "Catedral de Colonia", "Selva Negra"]
-            },
-            "United Kingdom": {
-                name: "Reino Unido",
-                capital: "Londres",
-                flag: "https://flagcdn.com/gb.svg",
-                desc: "Nación insular formada por Inglaterra, Escocia, Gales e Irlanda del Norte.",
-                image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=600&q=80",
-                spots: ["Big Ben / Palacio de Westminster", "Stonehenge", "Castillo de Edimburgo", "Ojo de Londres"]
-            },
-            "Portugal": {
-                name: "Portugal",
-                capital: "Lisboa",
-                flag: "https://flagcdn.com/pt.svg",
-                desc: "Ubicado en la Península Ibérica, destaca por su costa atlántica, arquitectura manuelina y tradición fado.",
-                image: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&w=600&q=80",
-                spots: ["Torre de Belém (Lisboa)", "Palacio da Pena (Sintra)", "Bodegas de Oporto", "Playas del Algarve"]
-            },
-            "Greece": {
-                name: "Grecia",
-                capital: "Atenas",
-                flag: "https://flagcdn.com/gr.svg",
-                desc: "Cuna de la democracia y la filosofía, rodeada por aguas turquesas e islas emblemáticas.",
-                image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=600&q=80",
-                spots: ["Acrópolis de Atenas", "Santorini", "Meteora", "Isla de Míkonos"]
-            },
-            "Switzerland": {
-                name: "Suiza",
-                capital: "Berna",
-                flag: "https://flagcdn.com/ch.svg",
-                desc: "Famosa por sus imponentes Alpes, lagos cristalinos, relojes de precisión y chocolate.",
-                image: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=600&q=80",
-                spots: ["Monte Cervino / Matterhorn", "Lucerna y su puente histórico", "Interlaken", "Lago Lemán"]
-            },
-            "Netherlands": {
-                name: "Países Bajos",
-                capital: "Ámsterdam",
-                flag: "https://flagcdn.com/nl.svg",
-                desc: "Conocido por sus canales, campos de tulipanes, molinos de viento y ciclismo urbano.",
-                image: "https://images.unsplash.com/photo-1512470876302-972faa2aa9a4?auto=format&fit=crop&w=600&q=80",
-                spots: ["Rijksmuseum (Ámsterdam)", "Jardines de Keukenhof", "Molinos de Zaanse Schans", "Barrio de los Canales"]
-            },
-            "Austria": {
-                name: "Austria",
-                capital: "Viena",
-                flag: "https://flagcdn.com/at.svg",
-                desc: "Capital histórica de la música clásica y el Imperio Húngaro entre majestuosos paisajes alpinos.",
-                image: "https://images.unsplash.com/photo-1516550893923-42d28e5677af?auto=format&fit=crop&w=600&q=80",
-                spots: ["Palacio Schönbrunn (Viena)", "Pueblo de Hallstatt", "Catedral de San Esteban", "Salzburgo"]
-            }
-        };
+<p>
 
-        const svg = d3.select("#map-svg");
-        const container = d3.select("#mapContainer");
-        const g = svg.append("g");
+Descubre cinco de los países europeos más importantes que han participado en la Copa Mundial de la FIFA y conoce algunos de sus lugares turísticos más famosos.
 
-        let rawCountryFeatures = [];
+</p>
 
-        // Proyección enfocada en Europa
-        const projection = d3.geoMercator()
-            .center([13, 52])
-            .scale(600);
+</header>
 
-        const path = d3.geoPath().projection(projection);
+<nav>
 
-        const zoom = d3.zoom()
-            .scaleExtent([1, 10])
-            .on("zoom", (event) => g.attr("transform", event.transform));
+<a href="#alemania">Alemania</a>
 
-        svg.call(zoom);
+<a href="#gran">Gran Bretaña</a>
 
-        function updateSvgSize() {
-            const width = container.node().clientWidth;
-            const height = container.node().clientHeight;
-            svg.attr("width", width).attr("height", height);
-            projection.translate([width / 2, height / 2]);
-            g.selectAll("path").attr("d", path);
-        }
+<a href="#francia">Francia</a>
 
-        window.addEventListener("resize", updateSvgSize);
+<a href="#espana">España</a>
 
-        // Cargar archivo cartográfico estándar
-        d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(data => {
-            rawCountryFeatures = topojson.feature(data, data.objects.countries).features;
-            updateSvgSize();
+<a href="#croacia">Croacia</a>
 
-            g.selectAll("path")
-                .data(rawCountryFeatures)
-                .enter()
-                .append("path")
-                .attr("class", "country")
-                .attr("d", path)
-                .on("click", function(event, d) {
-                    d3.selectAll(".country").classed("active", false);
-                    d3.select(this).classed("active", true);
-                    
-                    // Abrir panel usando las propiedades reales del mapa
-                    openPanel(d.properties.name);
-                });
-        });
+</nav>
 
-        // Controles de zoom
-        d3.select("#zoomIn").on("click", () => svg.transition().call(zoom.scaleBy, 1.4));
-        d3.select("#zoomOut").on("click", () => svg.transition().call(zoom.scaleBy, 0.7));
-        d3.select("#resetZoom").on("click", () => svg.transition().call(zoom.transform, d3.zoomIdentity));
+<div class="buscador">
 
-        // Panel de información
-        const sidePanel = document.getElementById("sidePanel");
-        const backdrop = document.getElementById("backdrop");
-        const panelContent = document.getElementById("panelContent");
+<input
+type="text"
+id="buscar"
+placeholder="Buscar un país...">
 
-        function openPanel(englishName) {
-            const country = countriesData[englishName] || {
-                name: englishName,
-                capital: "Desconocida",
-                flag: "https://flagcdn.com/un.svg",
-                desc: "Información turística en actualización.",
-                image: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80",
-                spots: ["Atractivos culturales", "Centros históricos", "Parques naturales"]
-            };
+</div>
 
-            panelContent.innerHTML = `
-                <div class="flag-name">
-                    <img src="${country.flag}" alt="${country.name}">
-                    <div>
-                        <h2>${country.name}</h2>
-                        <small style="color: #718096;">Capital: ${country.capital}</small>
-                    </div>
-                </div>
-                <p style="margin-top:0.8rem; line-height: 1.5;">${country.desc}</p>
-                <div class="attraction-card">
-                    <h3 style="font-size: 1rem;">Lugares Turísticos Destacados</h3>
-                    <ul>
-                        ${country.spots.map(s => `<li>${s}</li>`).join('')}
-                    </ul>
-                    <img src="${country.image}" alt="${country.name}">
-                </div>
-            `;
+<section>
 
-            sidePanel.classList.add("open");
-            backdrop.classList.add("show");
-        }
+<div class="pais" id="alemania">
 
-        function closePanel() {
-            sidePanel.classList.remove("open");
-            backdrop.classList.remove("show");
-            d3.selectAll(".country").classed("active", false);
-        }
+<h2>🇩🇪 Alemania</h2>
 
-        document.getElementById("panelClose").addEventListener("click", closePanel);
-        backdrop.addEventListener("click", closePanel);
+<img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Brandenburg_Gate_Berlin.jpg">
 
-        // Búsqueda por texto
-        document.getElementById("searchInput").addEventListener("input", function(e) {
-            const query = e.target.value.toLowerCase().trim();
-            if (!query) return;
+<p>
 
-            g.selectAll("path").classed("active", function(d) {
-                const enName = (d.properties.name || "").toLowerCase();
-                const esData = countriesData[d.properties.name];
-                const esName = esData ? esData.name.toLowerCase() : "";
+Alemania es uno de los países más importantes de Europa. Es conocida por su historia, castillos, museos, ciudades modernas y por haber ganado cuatro Copas del Mundo.
 
-                if (enName.includes(query) || esName.includes(query)) {
-                    return true;
-                }
-                return false;
-            });
-        });
+</p>
 
-        // Modo Oscuro
-        document.getElementById("themeToggle").addEventListener("click", () => {
-            document.body.classList.toggle("dark");
-            const icon = document.querySelector("#themeToggle i");
-            icon.className = document.body.classList.contains("dark") ? "fas fa-sun" : "fas fa-moon";
-        });
-    </script>
+<h3>5 Lugares Turísticos</h3>
+
+<ul>
+
+<li>Puerta de Brandeburgo</li>
+
+<li>Castillo de Neuschwanstein</li>
+
+<li>Catedral de Colonia</li>
+
+<li>Selva Negra</li>
+
+<li>Isla de los Museos</li>
+
+</ul>
+
+</div>
+
+<div class="pais" id="gran">
+
+<h2>🇬🇧 Gran Bretaña</h2>
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/c/cd/London_Montage_L.jpg">
+
+<p>
+
+Gran Bretaña combina tradición e innovación. Londres es una de las ciudades más visitadas del mundo gracias a sus monumentos históricos y su cultura.
+
+</p>
+
+<h3>5 Lugares Turísticos</h3>
+
+<ul>
+
+<li>Big Ben</li>
+
+<li>Palacio de Buckingham</li>
+
+<li>Tower Bridge</li>
+
+<li>Stonehenge</li>
+
+<li>Castillo de Edimburgo</li>
+
+</ul>
+
+</div>
+<div class="pais" id="francia">
+
+<h2>🇫🇷 Francia</h2>
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/a/a8/Tour_Eiffel_Wikimedia_Commons.jpg" alt="Torre Eiffel">
+
+<p>
+
+Francia es el país más visitado del mundo. Destaca por su arte, gastronomía, historia y monumentos emblemáticos. Además, ha conquistado dos Copas del Mundo.
+
+</p>
+
+<h3>5 Lugares Turísticos</h3>
+
+<ul>
+
+<li>Torre Eiffel</li>
+
+<li>Museo del Louvre</li>
+
+<li>Palacio de Versalles</li>
+
+<li>Arco del Triunfo</li>
+
+<li>Mont Saint-Michel</li>
+
+</ul>
+
+</div>
+
+<div class="pais" id="espana">
+
+<h2>🇪🇸 España</h2>
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Sagrada_Familia_01.jpg" alt="Sagrada Familia">
+
+<p>
+
+España es conocida por su arquitectura, playas, gastronomía y ciudades históricas. Ganó la Copa Mundial de la FIFA en 2010.
+
+</p>
+
+<h3>5 Lugares Turísticos</h3>
+
+<ul>
+
+<li>Sagrada Familia</li>
+
+<li>Alhambra de Granada</li>
+
+<li>Parque Güell</li>
+
+<li>Plaza Mayor de Madrid</li>
+
+<li>Mezquita-Catedral de Córdoba</li>
+
+</ul>
+
+</div>
+
+<div class="pais" id="croacia">
+
+<h2>🇭🇷 Croacia</h2>
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Dubrovnik_old_town.jpg" alt="Dubrovnik">
+
+<p>
+
+Croacia se ha convertido en uno de los destinos turísticos más populares de Europa gracias a sus playas, ciudades medievales y parques nacionales. Fue subcampeona del Mundial 2018.
+
+</p>
+
+<h3>5 Lugares Turísticos</h3>
+
+<ul>
+
+<li>Murallas de Dubrovnik</li>
+
+<li>Parque Nacional de los Lagos de Plitvice</li>
+
+<li>Palacio de Diocleciano</li>
+
+<li>Isla de Hvar</li>
+
+<li>Anfiteatro Romano de Pula</li>
+
+</ul>
+
+</div>
+
+</section>
+
+<footer>
+
+<h2>⚽ Mundial FIFA 2026</h2>
+
+<p style="margin-top:15px;">
+Explora la riqueza cultural e histórica de algunos de los países europeos más importantes del fútbol mundial.
+</p>
+
+<p style="margin-top:15px;">
+Proyecto educativo sobre turismo europeo y la Copa Mundial de la FIFA 2026.
+</p>
+
+</footer>
+
+<script>
+
+const buscador=document.getElementById("buscar");
+
+buscador.addEventListener("keyup",function(){
+
+let texto=this.value.toLowerCase();
+
+let paises=document.querySelectorAll(".pais");
+
+paises.forEach(function(pais){
+
+let nombre=pais.querySelector("h2").textContent.toLowerCase();
+
+if(nombre.includes(texto)){
+
+pais.style.display="block";
+
+}else{
+
+pais.style.display="none";
+
+}
+
+});
+
+});
+
+</script>
+
 </body>
+
 </html>
